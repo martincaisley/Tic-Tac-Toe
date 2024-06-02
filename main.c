@@ -7,7 +7,7 @@
 bool checkForWin(char board[SIZE][SIZE], char player);
 bool checkForDraw(char board[SIZE][SIZE]);
 void printGrid(char board[SIZE][SIZE]);
-void makeMove(int move, char player, char board[SIZE][SIZE]);
+bool makeMove(int move, char player, char board[SIZE][SIZE]);
 
 void printGrid(char board[SIZE][SIZE]) {
     for (int i = 0; i < SIZE; i++) {
@@ -20,16 +20,22 @@ void printGrid(char board[SIZE][SIZE]) {
     }
 }
 
-void makeMove(int move, char player, char board[SIZE][SIZE]) {
+bool makeMove(int move, char player, char board[SIZE][SIZE]) {
     int row = (move - 1) / SIZE;
     int col = (move - 1) % SIZE;
+
+    if (board[row][col] == 'x' || board[row][col] == 'o') {
+        return false; // Spot is already taken
+    }
+
     board[row][col] = player;
+    return true;
 }
 
 bool checkForDraw(char board[SIZE][SIZE]) {
     for (int i = 0 ; i < SIZE ; i++) {
         for (int j = 0 ; j < SIZE ; j++) {
-            if(board[i][j] != 'x' && board[i][j] != 'o' ) {
+            if (board[i][j] != 'x' && board[i][j] != 'o') {
                 return false;
             }
         }
@@ -58,6 +64,7 @@ int main(void) {
     bool gameDrawn = false;
     char currentPlayer = 'x';
     char move;
+    int moveNumber;
 
     char board[SIZE][SIZE] = {
             {'1', '2', '3'},
@@ -65,30 +72,35 @@ int main(void) {
             {'7', '8', '9'}
     };
 
-    while(!gameWon && !gameDrawn) {
+    while (!gameWon && !gameDrawn) {
         printf("Player %c, enter your move using the numbers on the grid below:\n\n", currentPlayer);
 
         printGrid(board);
-        scanf(" %c", &move); // The space before %c to consume any leftover whitespace.
-        int moveNumber = move - '0';
+        scanf(" %c", &move); // Note the space before %c to consume any leftover whitespace.
+        moveNumber = move - '0';
 
-        if (moveNumber < 1 || moveNumber > 9 ) {
+        if (moveNumber < 1 || moveNumber > 9) {
             printf("Invalid Move Number: %c, Please try again\n", move);
             continue; // Skip to the next iteration of the loop to get a valid move
         }
 
-        makeMove(moveNumber, currentPlayer, board);
+        if (!makeMove(moveNumber, currentPlayer, board)) {
+            printf("Spot already taken, please try again.\n");
+            continue; // Skip to the next iteration of the loop to get a valid move
+        }
+
         printGrid(board);
         gameWon = checkForWin(board, currentPlayer);
         gameDrawn = checkForDraw(board);
 
-        if(gameWon) {
+        if (gameWon) {
             printf("Player %c has won!\n", currentPlayer);
-        } else if(gameDrawn) {
+        } else if (gameDrawn) {
             printf("Game ended in a draw\n");
         } else {
             currentPlayer = (currentPlayer == 'x') ? 'o' : 'x';
         }
     }
+
     return 0;
 }
