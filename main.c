@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdbool.h>
+#include <limits.h>
 
 #define SIZE 3
 
@@ -8,6 +8,8 @@ bool checkForWin(char board[SIZE][SIZE], char player);
 bool checkForDraw(char board[SIZE][SIZE]);
 void printGrid(char board[SIZE][SIZE]);
 bool makeMove(int move, char player, char board[SIZE][SIZE]);
+int minimax(char board[SIZE][SIZE],int depth, bool isMaximizing);
+int availableMoves(char board[SIZE][SIZE]);
 
 void printGrid(char board[SIZE][SIZE]) {
     for (int i = 0; i < SIZE; i++) {
@@ -59,6 +61,67 @@ bool checkForWin(char board[SIZE][SIZE], char player) {
     return false;
 }
 
+int availableMoves(char board[SIZE][SIZE]) {
+    int bestScore = INT_MIN;
+    int bestMove = -1;
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            if (board[i][j] != 'x' && board[i][j] != 'o') {
+                char temp = board[i][j];
+                board[i][j] = 'o';
+                int score = minimax(board, 3, false);
+                board[i][j] = temp;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = (i * SIZE) + (j + 1);
+                }
+            }
+        }
+    }
+    return bestMove;
+}
+
+int minimax(char board[SIZE][SIZE], int depth, bool isMaximizing) {
+    if (checkForWin(board, 'o')) return 10 - depth;
+    if (checkForWin(board, 'x')) return depth - 10;
+    if (checkForDraw(board)) return 0;
+
+    if (isMaximizing) {
+        int bestScore = INT_MIN;
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (board[i][j] != 'x' && board[i][j] != 'o') {
+                    char temp = board[i][j];
+                    board[i][j] = 'o';
+                    int score = minimax(board, depth + 1, false);
+                    board[i][j] = temp;
+                    if (score > bestScore) {
+                        bestScore = score;
+                    }
+                }
+            }
+        }
+        return bestScore;
+    } else {
+        int bestScore = INT_MAX;
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (board[i][j] != 'x' && board[i][j] != 'o') {
+                    char temp = board[i][j];
+                    board[i][j] = 'x';
+                    int score = minimax(board, depth + 1, true);
+                    board[i][j] = temp;
+                    if (score < bestScore) {
+                        bestScore = score;
+                    }
+                }
+            }
+        }
+        return bestScore;
+    }
+}
+
+
 int main(void) {
     bool gameWon = false;
     bool gameDrawn = false;
@@ -72,12 +135,18 @@ int main(void) {
             {'7', '8', '9'}
     };
 
-    while (!gameWon && !gameDrawn) {
-        printf("Player %c, enter your move using the numbers on the grid below:\n\n", currentPlayer);
+    printGrid(board);
 
-        printGrid(board);
-        scanf(" %c", &move); // Note the space before %c to consume any leftover whitespace.
-        moveNumber = move - '0';
+    while (!gameWon && !gameDrawn) {
+        if(currentPlayer == 'x') {
+            printf("Player %c, enter your move using the numbers on the grid:\n\n", currentPlayer);
+            scanf(" %c", &move); // space before %c to consume any leftover whitespace.
+            moveNumber = move - '0';
+        }
+        else {
+            moveNumber = availableMoves(board);
+            printf("Opponent chose move: %d\n", moveNumber);
+        }
 
         if (moveNumber < 1 || moveNumber > 9) {
             printf("Invalid Move Number: %c, Please try again\n", move);
